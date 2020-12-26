@@ -224,14 +224,15 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 }
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", indexRoute)
-	router.HandleFunc("/cooperativas", getCooperativas).Methods(http.MethodGet)
-	router.HandleFunc("/cooperativas", createCooperativa).Methods(http.MethodPost)
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", deleteCooperativa).Methods(http.MethodDelete)
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", getCooperativa).Methods(http.MethodGet)
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", updateCooperativa).Methods(http.MethodPut)
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", updatePatchCooperativa).Methods(http.MethodPatch)
-	router.HandleFunc("/cooperativas/", optionsCooperativa).Methods(http.MethodOptions)
+	router.UseEncodedPath()
+	router.HandleFunc("/", indexRoute).Name("Index")
+	router.HandleFunc("/cooperativas", getCooperativas).Methods(http.MethodGet).Name("getCooperativas")
+	router.HandleFunc("/cooperativas", createCooperativa).Methods(http.MethodPost).Name("postCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", deleteCooperativa).Methods(http.MethodDelete).Name("deleteCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", getCooperativa).Methods(http.MethodGet).Name("getCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", updateCooperativa).Methods(http.MethodPut).Name("updateCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", updatePatchCooperativa).Methods(http.MethodPatch).Name("patchCooperativa")
+	router.HandleFunc("/cooperativas/", optionsCooperativa).Methods(http.MethodOptions).Name("optionCooperativa")
 
 	router.Use(mux.CORSMethodMiddleware(router))
 
