@@ -28,6 +28,15 @@ var cooperativasList = cooperativas{
 
 
 func optionsCooperativa(w http.ResponseWriter, r *http.Request)  {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodOptions {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 - Method Not Allowed")
+		return
+	}
+
+
 	var methodsList = []string {
 		http.MethodOptions,
 		http.MethodPatch,
@@ -45,13 +54,18 @@ func optionsCooperativa(w http.ResponseWriter, r *http.Request)  {
 
 func updatePatchCooperativa(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodPatch {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 - Method Not Allowed")
+		return
+	}
+
+
 	vars := mux.Vars(r)
 	coopertivaId, err := strconv.Atoi(vars["id"])
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
-		return
-	}
+
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -88,6 +102,13 @@ func updatePatchCooperativa(w http.ResponseWriter, r *http.Request) {
 
 func updateCooperativa(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 - Method Not Allowed")
+		return
+	}
+
 	vars := mux.Vars(r)
 	coopertivaId, err := strconv.Atoi(vars["id"])
 
@@ -100,10 +121,6 @@ func updateCooperativa(w http.ResponseWriter, r *http.Request) {
 	var updateCooperativa cooperativa
 	reqBody, err := ioutil.ReadAll(r.Body)
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
-		return
-	}
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -129,13 +146,18 @@ func updateCooperativa(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCooperativa(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 - Method Not Allowed")
+		return
+	}
+
+
 	vars := mux.Vars(r)
 	coopertivaId, err := strconv.Atoi(vars["id"])
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
-		return
-	}
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -159,13 +181,17 @@ func deleteCooperativa(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCooperativa(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 - Method Not Allowed")
+		return
+	}
+
 	vars := mux.Vars(r)
 	coopertivaId, err := strconv.Atoi(vars["id"])
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
-		return
-	}
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -183,6 +209,14 @@ func getCooperativa(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCooperativa(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 - Method Not Allowed")
+		return
+	}
+
 	var newCooperativa cooperativa
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -197,21 +231,20 @@ func createCooperativa(w http.ResponseWriter, r *http.Request) {
 		newCooperativa,
 	)
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
-		return
-	}
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(newCooperativa)
 }
 
 func getCooperativas(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 - Method Not Allowed")
 		return
 	}
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(cooperativasList)
