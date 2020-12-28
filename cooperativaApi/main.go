@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+
 type cooperativa struct {
 	ID                int    `json:"ID"`
 	RazonSocial       string `json:"RazonSocial"`
@@ -28,9 +29,7 @@ var cooperativasList = cooperativas{
 }
 
 
-func optionsCooperativa(w http.ResponseWriter, r *http.Request)  {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func optionsCooperativaHandler(w http.ResponseWriter, r *http.Request)  {
 	if r.Method != http.MethodOptions {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		 _, err := fmt.Fprintf(w, "405 - Method Not Allowed")
@@ -59,9 +58,7 @@ func optionsCooperativa(w http.ResponseWriter, r *http.Request)  {
 	}
 }
 
-func updatePatchCooperativa(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func updatePatchCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPatch {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
@@ -121,9 +118,7 @@ func updatePatchCooperativa(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func updateCooperativa(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func updateCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
@@ -181,16 +176,12 @@ func updateCooperativa(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func deleteCooperativa(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func deleteCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
 		if err != nil {
-
 			http.Error(w, err.Error(), 500)
-
 		}
 		return
 	}
@@ -230,9 +221,7 @@ func deleteCooperativa(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getCooperativa(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func getCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
@@ -271,9 +260,7 @@ func getCooperativa(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createCooperativa(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func createCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
@@ -316,21 +303,11 @@ func createCooperativa(w http.ResponseWriter, r *http.Request) {
 
 
 
-func indexRoute(w http.ResponseWriter, r *http.Request) {
-	_,err:=fmt.Fprintf(w, "Bienvenido to my cooperativas api ")
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-	}
-
-}
-
-func getCooperativas(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func getCooperativasHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
 		if err != nil {
-
 			http.Error(w, err.Error(), 500)
 		}
 		return
@@ -344,33 +321,55 @@ func getCooperativas(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
+func indexRouteHandler(w http.ResponseWriter, r *http.Request) {
+	_,err:=fmt.Fprintf(w, "Bienvenido to my cooperativas api ")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+}
 
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.RequestURI)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func setHeaderMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		next.ServeHTTP(w, r)
+	})
+}
+
+
+func run() error  {
+
+	router := mux.NewRouter().StrictSlash(true)
+	router.UseEncodedPath()
+	router.Use(loggingMiddleware)
+	router.Use(setHeaderMiddleware)
+	router.Use(mux.CORSMethodMiddleware(router))
+	router.HandleFunc("/", indexRouteHandler).Name("Index")
+	router.HandleFunc("/cooperativas", getCooperativasHandler).Methods(http.MethodGet).Name("getCooperativas")
+	router.HandleFunc("/cooperativas", createCooperativaHandler).Methods(http.MethodPost).Name("postCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", deleteCooperativaHandler).Methods(http.MethodDelete).Name("deleteCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", getCooperativaHandler).Methods(http.MethodGet).Name("getCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", updateCooperativaHandler).Methods(http.MethodPut).Name("updateCooperativa")
+	router.HandleFunc("/cooperativas/{id:[0-9]+}", updatePatchCooperativaHandler).Methods(http.MethodPatch).Name("patchCooperativa")
+	router.HandleFunc("/cooperativas/", optionsCooperativaHandler).Methods(http.MethodOptions).Name("optionCooperativa")
+
+	log.Fatal(http.ListenAndServe(":3001", router))
+
+	return nil
+}
+
+func main() {
 	if err:=run(); err != nil {
 		_,err:= fmt.Fprintf(os.Stderr, "%s\n", err)
 		if err != nil {
 			//TODO handle error
 		}
 	}
-
-}
-
-func run() error  {
-	router := mux.NewRouter().StrictSlash(true)
-	router.UseEncodedPath()
-	router.HandleFunc("/", indexRoute).Name("Index")
-	router.HandleFunc("/cooperativas", getCooperativas).Methods(http.MethodGet).Name("getCooperativas")
-	router.HandleFunc("/cooperativas", createCooperativa).Methods(http.MethodPost).Name("postCooperativa")
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", deleteCooperativa).Methods(http.MethodDelete).Name("deleteCooperativa")
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", getCooperativa).Methods(http.MethodGet).Name("getCooperativa")
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", updateCooperativa).Methods(http.MethodPut).Name("updateCooperativa")
-	router.HandleFunc("/cooperativas/{id:[0-9]+}", updatePatchCooperativa).Methods(http.MethodPatch).Name("patchCooperativa")
-	router.HandleFunc("/cooperativas/", optionsCooperativa).Methods(http.MethodOptions).Name("optionCooperativa")
-
-	router.Use(mux.CORSMethodMiddleware(router))
-
-	log.Fatal(http.ListenAndServe(":3001", router))
-
-	return nil
-
 }
