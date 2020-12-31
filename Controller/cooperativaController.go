@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/renerecalde/simple-rest/Entity"
+	"io/ioutil"
 	"net/http"
 	"strconv"
-	"io/ioutil"
 )
-type cooperativas []Entity.Cooperativa
 
-var cooperativasList = cooperativas{
-	{
-		ID:                1,
-		RazonSocial:       "Cooperativa 1",
-		MatriculaNacional: 1,
-	},
+
+var cooperativa = Entity.Cooperativa{
+	ID:                1,
+	RazonSocial:       "Cooperativa 1",
+	MatriculaNacional: 1,
+}
+var cooperativasList = Entity.Cooperativas{
+	cooperativa,
 }
 func OptionsCooperativaHandler(w http.ResponseWriter, r *http.Request)  {
 	if r.Method != http.MethodOptions {

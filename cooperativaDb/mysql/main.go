@@ -46,6 +46,28 @@ func main()  {
 		panic(err)
 	}
 
+	cooperativaList := Repository.ReadCooperativas(db)
+
+	if cooperativaList != nil {
+		_,err:= fmt.Println("lista cargada")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	cooperativa = cooperativaList[1]
+
+	result,err:= Repository.UpdateCooperativa(cooperativa,db)
+	_,err= fmt.Println(result)
+	if err != nil {
+		panic(err)
+	}
+
+	result, err= Repository.DeleteCooperativa(cooperativa,db)
+	_,err= fmt.Println(result)
+	if err != nil {
+		panic(err)
+	}
 
 
 
