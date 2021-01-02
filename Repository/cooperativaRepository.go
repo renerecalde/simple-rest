@@ -12,11 +12,20 @@ func CreateCooperativa(cooperativa Entity.Cooperativa, db *sql.DB) (result sql.R
 	statement, _ := db.Prepare("INSERT INTO cooperativa (RazonSocial, MatriculaNacional) VALUES (?,?)")
 	result, err = statement.Exec(cooperativa.RazonSocial, cooperativa.MatriculaNacional)
 	if err != nil {
-		//TODO handle error
+		panic(err)
 	}
 	log.Println("Inserted the coop into database!")
 
 	return result, err
+}
+
+func ReadCooperativa(id int, db *sql.DB)   (cooperativa Entity.Cooperativa, err error){
+	err = db.QueryRow("select ID, RazonSocial, MatriculaNacional from cooperativa where ID = ?", id).Scan(&cooperativa.ID, &cooperativa.RazonSocial, &cooperativa.MatriculaNacional)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cooperativa, err
+
 }
 
 func ReadCooperativas(db *sql.DB) (cooperativaList Entity.Cooperativas) {
@@ -30,6 +39,12 @@ func ReadCooperativas(db *sql.DB) (cooperativaList Entity.Cooperativas) {
 		log.Printf("ID:%d, RazonSocial:%s, MatriculaNacional:%s\n", tempCooperativa.ID, tempCooperativa.RazonSocial, strconv.Itoa(int(tempCooperativa.MatriculaNacional)))
 		cooperativaList = append(cooperativaList, tempCooperativa)
 	}
+
+	err:= rows.Close()
+	if err != nil {
+		//TODO handle error
+	}
+
 	return cooperativaList
 }
 
@@ -44,9 +59,21 @@ func UpdateCooperativa(cooperativa Entity.Cooperativa, db *sql.DB) (result sql.R
 	return result,err
 }
 
-func DeleteCooperativa(cooperativa Entity.Cooperativa, db *sql.DB)  (result sql.Result, err error){
+func UpdateCooperativaBy(field string, value string, id int, db *sql.DB) (result sql.Result, err error){
+	statement, _ := db.Prepare("update cooperativa set ?=? where id=?")
+	result, err = statement.Exec(field,value,strconv.Itoa(id))
+	if err != nil {
+		//TODO handle error
+	}
+	log.Println("Successfully updated the book in database!")
+
+	return result,err
+}
+
+
+func DeleteCooperativa(id int, db *sql.DB)  (result sql.Result, err error){
 	statement, _ := db.Prepare("delete from cooperativa where id=?")
-	result, err = statement.Exec(cooperativa.ID)
+	result, err = statement.Exec(id)
 	if err != nil {
 		//TODO handle error
 	}

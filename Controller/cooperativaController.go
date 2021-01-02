@@ -5,20 +5,14 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/renerecalde/simple-rest/Entity"
+	"github.com/renerecalde/simple-rest/ORM"
+	"github.com/renerecalde/simple-rest/Repository"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 )
 
 
-var cooperativa = Entity.Cooperativa{
-	ID:                1,
-	RazonSocial:       "Cooperativa 1",
-	MatriculaNacional: 1,
-}
-var cooperativasList = Entity.Cooperativas{
-	cooperativa,
-}
 func OptionsCooperativaHandler(w http.ResponseWriter, r *http.Request)  {
 	if r.Method != http.MethodOptions {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -81,35 +75,70 @@ func UpdatePatchCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	updateCooperativa.ID = coopertivaId
+
 	err = json.Unmarshal(reqBody, &updateCooperativa)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
 
-	for i, cooperativa := range cooperativasList {
-		if cooperativa.ID == coopertivaId {
 
-			if updateCooperativa.MatriculaNacional != 0 {
-				cooperativasList[i].MatriculaNacional = updateCooperativa.MatriculaNacional
-			}
+	DB := ORM.OpenDb()
 
-			if updateCooperativa.RazonSocial != "" {
-				cooperativasList[i].RazonSocial = updateCooperativa.RazonSocial
-			}
-
-			w.Header().Set("Content-type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			err:= json.NewEncoder(w).Encode(cooperativasList[i])
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-			}
+	if updateCooperativa.MatriculaNacional != 0 {
+		_, err = Repository.UpdateCooperativaBy(
+			"MatriculaNacional",
+			strconv.Itoa(int(updateCooperativa.MatriculaNacional)),
+			updateCooperativa.ID,
+			DB)
+		if err != nil {
+			//TODO handle error
 		}
 	}
+
+	if updateCooperativa.RazonSocial != "" {
+		_, err = Repository.UpdateCooperativaBy(
+			"RazonSocial",
+			updateCooperativa.RazonSocial,
+			updateCooperativa.ID,
+			DB)
+		if err != nil {
+			//TODO handle error
+		}
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err= json.NewEncoder(w).Encode(updateCooperativa)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+
+
+	//for i, cooperativa := range cooperativasList {
+	//	if cooperativa.ID == coopertivaId {
+	//
+	//		if updateCooperativa.MatriculaNacional != 0 {
+	//			cooperativasList[i].MatriculaNacional = updateCooperativa.MatriculaNacional
+	//		}
+	//
+	//		if updateCooperativa.RazonSocial != "" {
+	//			cooperativasList[i].RazonSocial = updateCooperativa.RazonSocial
+	//		}
+	//
+	//		w.Header().Set("Content-type", "application/json")
+	//		w.WriteHeader(http.StatusOK)
+	//		err:= json.NewEncoder(w).Encode(cooperativasList[i])
+	//		if err != nil {
+	//			http.Error(w, err.Error(), 500)
+	//		}
+	//	}
+	//}
 }
 
 
 func UpdateCooperativaHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodPut {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
 		if err != nil {
@@ -119,7 +148,6 @@ func UpdateCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	vars := mux.Vars(r)
 	coopertivaId, err := strconv.Atoi(vars["id"])
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_,err:=fmt.Fprintf(w, "Id inválido")
@@ -145,22 +173,21 @@ func UpdateCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 	}
 
-	for i, cooperativa := range cooperativasList {
-		if cooperativa.ID == coopertivaId {
+	updateCooperativa.ID = coopertivaId
 
-			cooperativasList = append(cooperativasList[:i], cooperativasList[i+1:]...)
-			updateCooperativa.ID = coopertivaId
-
-			cooperativasList = append(cooperativasList, updateCooperativa)
-
-			w.Header().Set("Content-type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			err:=json.NewEncoder(w).Encode(cooperativasList[i])
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-			}
-		}
+	DB := ORM.OpenDb()
+	_, err = Repository.UpdateCooperativa(updateCooperativa, DB)
+	if err != nil {
+		//TODO handle error
 	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err=json.NewEncoder(w).Encode(updateCooperativa)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+
 }
 
 func DeleteCooperativaHandler(w http.ResponseWriter, r *http.Request) {
@@ -188,62 +215,54 @@ func DeleteCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for i, cooperativa := range cooperativasList {
-		if cooperativa.ID == coopertivaId {
-
-			cooperativasList = append(
-				cooperativasList[:i],
-				cooperativasList[i+1:]...,
-			)
-
-			w.Header().Set("Content-type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			err:=json.NewEncoder(w).Encode(cooperativa)
-			if err != nil {
-
-				http.Error(w, err.Error(), 500)
-
-			}
-		}
+	DB := ORM.OpenDb()
+	_, err = Repository.DeleteCooperativa(coopertivaId,DB)
+	if err != nil {
+		//TODO handle error
 	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err=json.NewEncoder(w).Encode(coopertivaId)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+
 }
 
 func GetCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		_,err:=fmt.Fprintf(w, "405 - Method Not Allowed")
+		_, err := fmt.Fprintf(w, "405 - Method Not Allowed")
 		if err != nil {
 
 			http.Error(w, err.Error(), 500)
 		}
-
 		return
 	}
 
 	vars := mux.Vars(r)
 	coopertivaId, err := strconv.Atoi(vars["id"])
-
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_,err:=fmt.Fprintf(w, "Id inválido")
+		_, err := fmt.Fprintf(w, "Id inválido")
 		if err != nil {
-
 			http.Error(w, err.Error(), 500)
 		}
 		return
 	}
 
-	for _, cooperativa := range cooperativasList {
-		if cooperativa.ID == coopertivaId {
-			w.Header().Set("Content-type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			err:=json.NewEncoder(w).Encode(cooperativa)
-			if err != nil {
+	DB := ORM.OpenDb()
+	cooperativa, err := Repository.ReadCooperativa(coopertivaId,DB)
+	if err != nil {
+		//TODO handle error
+	}
 
-				http.Error(w, err.Error(), 500)
-			}
-		}
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(cooperativa)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
 	}
 }
 
@@ -273,15 +292,18 @@ func CreateCooperativaHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
-	newCooperativa.ID = len(cooperativasList) + 1
-	cooperativasList = append(
-		cooperativasList,
-		newCooperativa,
-	)
+
+	DB := ORM.OpenDb()
+	_, err = Repository.CreateCooperativa(newCooperativa,DB)
+	if err != nil {
+		http.Error(w, err.Error(), 409)
+	}
 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+
+	//Acá debería devolver el id de la entidad que cree recientemente
 	err=json.NewEncoder(w).Encode(newCooperativa)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -302,6 +324,10 @@ func GetCooperativasHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
+	DB := ORM.OpenDb()
+	cooperativasList := Repository.ReadCooperativas(DB)
+
 	err:=json.NewEncoder(w).Encode(cooperativasList)
 	if err != nil {
 		http.Error(w, err.Error(), 500)

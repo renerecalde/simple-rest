@@ -1,16 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/renerecalde/simple-rest/Controller"
 	"log"
 	"net/http"
 	"os"
-	//"database/sql"
-	//_ "github.com/go-sql-driver/mysql"
-	//"github.com/renerecalde/simple-rest/ORM"
-	"github.com/renerecalde/simple-rest/Controller"
 )
+
+// DB Driver visible to whole program
+var DB *sql.DB
 
 
 
